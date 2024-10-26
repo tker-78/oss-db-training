@@ -130,6 +130,14 @@ $ pg_basebackup
 # \copy users from 'data/users.txt' (format csv, header)
 ```
 
+または、バッチ処理として、
+```postgres
+# COPY users(id,name,age) FROM 'users.txt' DELIMITER ',' CSV HEADER;
+COPY 4
+```
+これの実行には、書き込み権限が必要。 
+
+
 
 ## 運用管理
 
@@ -219,7 +227,7 @@ autovacuum=on
 -- データベースの情報を確認
 # SELECT * FROM pg_database;
 
--- テーブル情報を家訓ん
+-- テーブル情報を確認
 # SELECT * FROM pg_tables;
 
 ```
@@ -243,10 +251,14 @@ autovacuum=on
 ```
 
 
+### SQLとオブジェクト
 
 
+#### ALTER TABLE
 
-
+```sql
+# ALTER TABLE users ADD COLUMN address VARCHAR;
+```
 
 
 
