@@ -262,6 +262,24 @@ autovacuum=on
 
 
 
+#### ビュー
+```sql
+# CREATE VIEW user_view (id, name) AS SELECT * FROM users WHERE id > 100;
+# SELECT * FROM user_view;
+# DROP VIEW user_view;
+```
+
+#### インデックス
+```sql
+# CREATE INDEX idx ON users((id || '-' || name));
+```
+
+
+## 組み込み関数と演算子
+
+### 
+
+
 
 
 
