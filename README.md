@@ -9,6 +9,15 @@ $ docker exec -it postgres_14 /bin/bash
 ```
 
 ```bash
+$ docker run --rm -P -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=password --name oss_db postgres:latest
+$ docker ps # port forwardingを確認
+$ psql postgresql://postgres:password@localhost:5432/postgres
+# postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
+```
+
+
+
+```bash
 $ su -
 $ su - postgres
 ```
@@ -90,6 +99,10 @@ initdbで生成される。
 - log_min_messages
 - log_line_prefix
 - 
+
+#### 設定が反映されるタイミング
+![image](./images/k63144.jpg)
+
 
 ### pg_hba.conf
 クライアント認証を設定するファイル。  
@@ -269,15 +282,37 @@ autovacuum=on
 # DROP VIEW user_view;
 ```
 
+#### マレリアリズドビュー
+```sql
+# CREATE MATERIALIZED VIEW user_view (id, name) AS SELECT * FROM users;
+```
+定義を変更する場合は、`ALTER MATERIALIZED VIEW`を使う。
+
+
+
+
 #### インデックス
 ```sql
 # CREATE INDEX idx ON users((id || '-' || name));
 ```
 
 
-## 組み込み関数と演算子
 
-### 
+## トランザクション
+
+### トランザクション分離レベル
+|レベル|特徴|
+|---|---|
+|Read uncommitted|ダーティーリード、反復不能読み取り、ファントムリード、直列化異常が起こる|
+|Read committed|反復不能読み取り、ファントムリード、直列化異常が起こる|
+|Repeatable read|ファントムリード、直列化異常が起こる|
+|Serializable|ダーティーリード、反復不能読み取り、ファントムリード、直列化異常のいずれも起こらない|
+
+
+PostgreSQLでは、Read committedをデフォルトで使用している。
+
+
+
 
 
 
