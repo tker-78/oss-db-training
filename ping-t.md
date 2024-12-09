@@ -1,32 +1,20 @@
 # Ping-T メモ
 
-## SQL
-### Foreign key
-下記のどちらでもOK.
+## 一般知識
+### PostgreSQLライセンス
+- 商用目的でPostgreSQLのサポートを有償で提供することができる
+- PostgreSQLの再配布は無償で行うことができる
+- 商用、非商用に関わらず無償で使用することができる
+- PostgreSQLは自由に複製でき、ソースコードの公開は必要ない
 
-```sql
-CREATE TABLE sample (
-    no INTEGER REFERENCES sample_1 (id),
-    name TEXT 
-);
-```
+### SQLの分類
+|言語|コマンド|
+|---|---|
+|DDL|CREATE, ALTER, DROP, TRUNCATEなど|
+|DML|SELECT, INSERT, UPDATE, DELETEなど|
+|DCL|GRANT, REVOKE, BEGIN, COMMIT, ROLLBACKなど|
 
-```sql
-CREATE TABLE sample (
-    no INTEGER,
-    name TEXT,
-    FOREIGN KEY (no) REFERENCES sample_1 (id)
-);
-```
 
-### SQLの処理
-下記のいずれも実行可能。
-```bash
-$ psql -c "SLECT * FROM sample"
-testdb=> SELECT * FROM sample
-$ psql testdb < sample.sql
-$ psql -f 'sample.sql'
-```
 
 ## 設定ファイル
 ### ログレベルの設定
@@ -55,6 +43,9 @@ WALや制御情報の破損によりPostgreSQLサーバが起動できない場�
 |-f, --force|制御情報が読み取れない場合でも、強制的に実行する|
 
 ### createuser
+新しいユーザアカウントを定義する。
+
+
 |オプション|説明|
 |---|---|
 |-P, --pwprompt|パスワードを設定する|
@@ -62,6 +53,11 @@ WALや制御情報の破損によりPostgreSQLサーバが起動できない場�
 |-d, --createdb|データベースの作成を許可する|
 |-r, --createrole|新しいユーザの作成を許可する|
 |-l, --login|ログインを許可する|
+|-S, --no-superuser|新しいユーザをスーパーユーザにしない|
+|-D, --no-createdb|データベースの作成を禁止する|
+|-R, --no-createrole|新しいユーザの作成を禁止する|
+|-L, --no-login|ログインを禁止する|
+
 
 
 
@@ -81,6 +77,20 @@ WALや制御情報の破損によりPostgreSQLサーバが起動できない場�
 |-l, --locale=ロケール名|データベースで使用されるロケールを指定する|
 |-T, --template=テンプレート名|テンプレートデータベースを指定する|
 
+<br/>
+
+### template
+デフォルトではtemplate1が使用される。
+
+
+|データベース名|説明|
+|---|---|
+|template0|テンプレートデータベース(変更不可)|
+|template1|テンプレートデータベース(変更可)|
+|postgres|通常のデータベースと同様に使うことができる|
+
+<br/>
+
 ### pg_restore
 論理バックアップのリストアに使用するコマンドで、テキスト以外(カスタム形式やtar形式)でバックアップされたファイルが対象となる。
 
@@ -91,7 +101,7 @@ WALや制御情報の破損によりPostgreSQLサーバが起動できない場�
 |-j, --jobs=ジョブ数|リストア処理を同時に実行するジョブ数を指定する|
 |-1, --single-transaction|リストア処理を1つのトランザクションとして実行する|
 
-
+<br/>
 
 ### psqlの接続オプション
 |接続オプション|説明|環境変数|デフォルト|
@@ -110,13 +120,33 @@ WALや制御情報の破損によりPostgreSQLサーバが起動できない場�
 |-t 最大待ち時間|シャットダウンが完了するまでの待ち時間を指定する 指定がない場合は60秒になる|
 
 
-### createdb
-指定しない場合は、template1が適用される。  
-template0は設定の変更が可能。
-
-
 ## SQL
+### Foreign key
+下記のどちらでもOK.
 
+```sql
+CREATE TABLE sample (
+    no INTEGER REFERENCES sample_1 (id),
+    name TEXT 
+);
+```
+
+```sql
+CREATE TABLE sample (
+    no INTEGER,
+    name TEXT,
+    FOREIGN KEY (no) REFERENCES sample_1 (id)
+);
+```
+
+### SQLの処理
+下記のいずれも実行可能。
+```bash
+$ psql -c "SLECT * FROM sample"
+testdb=> SELECT * FROM sample
+$ psql testdb < sample.sql
+$ psql -f 'sample.sql'
+```
 ### シーケンス
 
 シーケンスのセット  
@@ -148,6 +178,11 @@ search_pathのデフォルトは、`$user, public`
 トリガー名を変更する
 ```sql
 # ALTER TRIGGER sample_trg ON sample RENAME TO log_trg;
+```
+
+トリガーを削除する
+```sql
+# DROP TRIGGER sample_trg ON sample;
 ```
 
 
@@ -291,6 +326,10 @@ DOUBLE PRECISION
 
 
 ### PREPARED
+性能を最適化するために利用可能なサーバ側オブジェクト。
+
+
+
 プリペアド文の削除
 ```sql
 # DEALLOCATE sample_prepare;
@@ -351,6 +390,10 @@ sampleテーブルに対する統計情報を収集する
 
 
 ### VIEW
+複雑なSQL文のSELECT結果を頻繁に使用したい場合、SELECT分の結果をテーブルのように定義することができる。
+
+
+
 VIEWでは
 - SELECT
 - UPDATE
@@ -358,9 +401,41 @@ VIEWでは
 - INSERT
 を実行できる。
 
+ALTER VIEWでデフォルト値を設定する
+```sql
+# ALTER VIEW sample_view ALTER groupNo SET DEFAULT 9;
+```
+
+- ALTER VIEWを実行するにはビューの所有者である必要がある。
+
+### ロック
+PostgreSQLには、デッドロックを検知すると対象のトランザクションをロールバックし、自動で回復させる機能がある。
+
+- デーブル全体のロックは、「LOCK TABLE テーブル名 IN ロックモード MODE」を使用して設定する
+- 行に対するロックは、「SELECT FOR SHARE」や「SELECT FOR UPDATE」を使用して設定できる
+- 行に対するロックは、排他ロックと共有ロックの2種類である
+
+
 
 
 ## 設定ファイル
+
+### initdb
+|オプション|説明|
+|---|---|
+|-D ディレクトリ名、--pgdata=ディレクトリ名|データベースクラスタを作成するディレクトリを指定する。指定しない場合は、環境変数$PGDATAになる|
+|-E エンコーディング, --encoding=エンコーディング|エンコーディングを指定する。指定しない場合は、OSのロケールから自動的に設定される|
+|--locale=ロケール|ロケールを指定する。指定しない場合は、OSのロケールが使われる。--locale=Cはロケールを無効にする。|
+|--no-locale|ロケールを無効にする。--locale=Cに同じ。|
+|-U ユーザ名、--username=ユーザ名|作成するデータベースのスーパユーザ名を指定する。指定しない場合は、コマンドを実行したOSユーザ名でスーパユーザが作成される|
+|-k, --data-checksums|データベースのチェックサム(データ破損を検出するための仕組み)を有効にする|
+|-X ディレクトリ名、--waldir=ディレクトリ名|WALを格納するディレクトリを指定する|
+
+
+
+
+<br/>
+
 ### postgresql.conf
 PostgreSQLのパラメータを設定するファイル。  
 
@@ -389,15 +464,18 @@ initdbで生成される。
 
 #### 設定が反映されるタイミング
 ![image](./images/k63144.jpg)
+<br/>
 
 ### postgresql.auto.conf
 - postgresql.confの設定よりも優先される
 - バージョン9.4で追加された機能
 - ALTER SYSTEMコマンドで操作する
+<br/>
 
 ### pg_hba.conf
 クライアント認証を設定するファイル。  
 initdbで生成される。  
+<br/>
 
 ### pg_settings
 pg_settingsは、サーバのパラメータ値を取得するビュー。
@@ -420,23 +498,61 @@ nameカラムにパラメータ名、settingカラムにパラメータ値が表
 ### SET
 SETで変更した設定は、postgresqlの再起動時に破棄される。
 
+### データベースエンコーディング(サーバエンコーディング)
+
+- initdbコマンドのオプションで設定する
+- SJISは指定できない
+- クライアントエンコーディングではSJISも指定できる
+
 
 
 
 ## バックアップとリストア
 
-### 稼働中のバックアップ
+### pg_dump
+論理バックアップをデータベース単位で取得する際に使用するコマンド。
+- データベースクラスタ全体に対する、ロールやテーブルスペース定義は取得できない。
+- オプションを指定することで、テーブル定義のみやデータのみのバックアップも可能
+- -fオプションでバックアップを出力するファイル名を指定できる。
+- -Fオプションでバックアップファイルの形式を指定できる。
+
+
+稼働中のバックアップ
 ```bash
 $ pg_dump sampledb
 ```
 
-### 停止中のバックアップ
+停止中のバックアップ
 ```bash
 $ cd $PGDATA/..
 $ tar cvf backup.tar data
 ```
 
+<br/>
+
+### pg_restore
+- 論理バックアップで取得したファイルのリストアを行うコマンド。
+- PostgreSQLの稼働中に実行することができる。
+- テキスト形式以外でバックアップされたファイルが対象となる。
+- リストア対象には、テーブルデータの他にラージオブジェクトやシーケンス値が含まれる
+- リストア先に指定するデータベースは、リストア時に作成されている必要がる。
+```sql
+# pg_restore -U postgres -d test file.dump
+```
+
+<br/>
+
 ### PITR(Point In Time Recovery)
+ベースバックアップと、PostgreSQLの運用中に出たWALを使用してデータベースを復旧する方法。
+- PITRで使用するWALはWALファイルに記録され、溜まり続けていくと古いものから削除される。
+- WALファイルが削除される前に、WALファイルを別の場所に移して保存する必要がある。
+- PostgreSQLは稼働したまま実行できる。
+- ベースバックアップはデータベースクラスタ全体をバックアップ対象とする。
+- 定期的に実行することで、WALアーカイブの容量を抑え、復旧処理の時間を短縮できる
+- バックアップ中のデータが更新された場合もデータを再取得する必要はない
+- pg_start_backup()、pg_stop_backup()関数を使用する方法がある
+- pg_basebackupコマンドを使用する方法がある
+
 
 ```bash
 $ pg_basebackup
@@ -464,4 +580,35 @@ COPY 4
 ```
 これの実行には、書き込み権限が必要。 
 
+sampleテーブルの内容を、サーバ側にCSV形式で「sample.csv」ファイルとして出力する。
+```sql
+# COPY sample TO '/Users/local/sample.csv' WITH (FROMAT csv);
+```
+
+`\copy`コマンドはクライアント側、`COPY`コマンドはサーバ側のファイルにアクセスする。
+
+<br/>
+
+## トランザクション　
+
+### SAVEPOINT
+トランザクション内の処理を一部だけ取り消す際に使用する。
+
+```sql
+# SAVEPOINT セーブポイント名;
+# ROLLBACK TO セーブポイント名;
+# RELEASE SAVEPOINT セーブポイント名;
+```
+
+<br/>
+
+## 組み込み関数
+### extract(), date_part()
+日時から指定したフィールドの値のみを取得する。
+引数に指定できるのはタイムスタンプ型のみ。
+
+```sql
+# SELECT date_part('minute', current_timestamp);
+# SELECT extract(minute from now());
+```
 
