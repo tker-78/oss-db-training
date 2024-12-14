@@ -1,11 +1,15 @@
 # Ping-T メモ
 
+<br/>
+
 ## 一般知識
 ### PostgreSQLライセンス
 - 商用目的でPostgreSQLのサポートを有償で提供することができる
 - PostgreSQLの再配布は無償で行うことができる
 - 商用、非商用に関わらず無償で使用することができる
 - PostgreSQLは自由に複製でき、ソースコードの公開は必要ない
+
+<br/>
 
 ### SQLの分類
 |言語|コマンド|
@@ -14,19 +18,21 @@
 |DML|SELECT, INSERT, UPDATE, DELETEなど|
 |DCL|GRANT, REVOKE, BEGIN, COMMIT, ROLLBACKなど|
 
+<br/>
+
 ### サポート期限
 サポート期限は、メジャーバージョンの最初のリリースから5年間と決められている。
 
 <br/>
 
 ### ライセンス
-
 #### BSDライセンス
 - 商用・非商用問わず誰でも無償で利用でき、自由に複製・改変できる。
 - ソースコードを公開する義務はない。
 - 再配布する際には、著作権とライセンス条文、無保証であることをドキュメントに記載する必要がある
 - ソフトウェアの不具合に対して責任は負わない
 
+<br/>
 
 
 ## 設定ファイル
@@ -41,6 +47,7 @@
 |FATAL|特定のセッションを中断させたエラー|
 |PANIC|全てのセッションを中断させた致命的なエラー|
 
+<br/>
 
 
 ## 標準ツールの使い方
@@ -55,9 +62,10 @@ WALや制御情報の破損によりPostgreSQLサーバが起動できない場�
 |-n, --dry-run|実際に変更処理は行わず、変更内容の出力のみを行う|
 |-f, --force|制御情報が読み取れない場合でも、強制的に実行する|
 
+<br/>
+
 ### createuser
 新しいユーザアカウントを定義する。
-
 
 |オプション|説明|
 |---|---|
@@ -74,13 +82,13 @@ WALや制御情報の破損によりPostgreSQLサーバが起動できない場�
 OSのコマンドプロンプトから実行する場合: 
 OSの管理ユーザー、一般ユーザーにかかわらず実行できるが、スーパーユーザ権限またはCREATEROLE権限が必要。
 
-
-
-
+<br/>
 
 ### dropuser
 アカウントを削除する。  
 -Uを指定すると、接続時のデータベースユーザーを指定することができる。
+
+<br/>
 
 ### createdb
 - テンプレートデータベースから設定やオブジェクトをコピーして作成する。
@@ -135,6 +143,8 @@ $ pg_restore -d db002 db002.bak
 |-d データベース名|接続先のデータベース名を指定|PGDATABASE|データベースユーザ名|
 |-p ポート名|接続先のポート番号を指定|PGPORT|5432|
 
+<br/>
+
 ### pg_ctl stop
 |オプション|説明|
 |---|---|
@@ -143,25 +153,28 @@ $ pg_restore -d db002 db002.bak
 |-W|シャットダウンの完了を待たずにコマンド発行元に制御を戻す(デフォルトでは完了まで最大60秒待ち、停止完了のメッセージを表示する)|
 |-t 最大待ち時間|シャットダウンが完了するまでの待ち時間を指定する 指定がない場合は60秒になる|
 
+<br/>
 
 ## SQL
 ### Foreign key
 下記のどちらでもOK.
 
-```sql
+```postgres
 CREATE TABLE sample (
     no INTEGER REFERENCES sample_1 (id),
     name TEXT 
 );
 ```
 
-```sql
+```postgres
 CREATE TABLE sample (
     no INTEGER,
     name TEXT,
     FOREIGN KEY (no) REFERENCES sample_1 (id)
 );
 ```
+
+<br/>
 
 ### SQLの処理
 下記のいずれも実行可能。
@@ -171,13 +184,8 @@ testdb=> SELECT * FROM sample
 $ psql testdb < sample.sql
 $ psql -f 'sample.sql'
 ```
-### シーケンス
 
-シーケンスのセット  
-
-```sql
-# SELECT setval('sample', 100);
-```
+<br/>
 
 ### 配列型
 配列型は複数の値を格納するデータ型であり、全データ型に対して使用できる。  
@@ -194,18 +202,18 @@ search_pathのデフォルトは、`$user, public`
 挿入、更新、削除が要求された場合、各処理の前に一度だけ「log_write()」
 関数を実行する。
 
-```sql
+```postgres
 # CREATE TRIGGER sample_trg BEFORE INSERT OR UPDATE OR DELETE
   ON sample EXECUTE PROCEDURE log_write();
 ```
 
 トリガー名を変更する
-```sql
+```postgres
 # ALTER TRIGGER sample_trg ON sample RENAME TO log_trg;
 ```
 
 トリガーを削除する
-```sql
+```postgres
 # DROP TRIGGER sample_trg ON sample;
 ```
 
@@ -213,7 +221,7 @@ search_pathのデフォルトは、`$user, public`
 
 ### NATURAL INNER JOIN
 等しい名称のカラムを用いて、結合を行う。
-```sql
+```postgres
 # SELECT * FROM member NATURAL INNER JOIN department;
 ```
 
@@ -223,12 +231,12 @@ search_pathのデフォルトは、`$user, public`
 データへの処理パフォーマンスを向上させることができる。
 
 パーティションの作成には、
-```sql
+```postgres
 # CREATE TABLE PARTITION ...
 ```
 
 パーティションの削除は、
-```sql
+```postgres
 # DROP TABLE ...
 ```
 
@@ -248,73 +256,89 @@ search_pathのデフォルトは、`$user, public`
 - 削除には、`DROP SEQUENCE`
 - nextval()を呼び出す前にcurrval()を呼び出すとエラーになる
 
+```postgres
+-- シーケンスのセット  
+# SELECT setval('sample', 100);
+```
+
 
 下記のコマンドでは、1010が返される。
 
-```sql
+```postgres
 # CREATE SEQUENCE sample_sql CACHE 5 NO CYCLE;
 # SELECT setval('sample_seq');
 ```
 
+<br/>
+
 ### interval
 現在の3ヶ月前の日時を取得する。
-```sql
+```postgres
 # SELECT now() - interval '3 month';
 # SELECT now() p '3 month'::interval;
 ```
+
+<br/>
 
 ### FUNCTION
 FUNCTIONの作成。  
 STRICTオプションを指定すると、
 NULLを渡すと処理を実行せずにNULLを返す。
 
-```sql
+```postgres
 # CREATE FUNCTION sample_func(TEXT) RETURNS SETOF INTEGER AS $$
   SELECT id FROM sample staff = $1 ORDER BY id LIMIT 2;
   $$ LANGUAGE SQL STRICT;
 ```
 
 FUNCTIONの削除。
-```sql
+```postgres
 # DROP FUNCTION sample(TEXT);
 ```
+
+<br/>
 
 ### CREATE PROCEDURE
 version11から使用できる。  
 CREATE FUNCTIONのうち、戻り値のないものに対して代用できる。
 
-```sql
+```postgres
 # CREATE PROCEDURE funcX(VARCHAR) AS $$
   INSERT INTO suctomer_log VALUES($1, CURRENT_DATE, 'shopA');
   $$ LANGUAGE SQL;
 ```
 PROCEDUREの呼び出しには、`CALL`を用いる。
 
+<br/>
+
 ### バイナリ列データ
 バイトの連続からなるテキスト以外のデータ。バイナリ列データを格納するデータ型として、BYTEA型が用意されている。
+
+<br/>
 
 ### SCHEMA
 多数のデータベースの格納先を、テーブルの目的や所有者に応じて分類する仕組みのこと。 実体としては、データベース内でテーブルなどのオブジェクトを格納している名前空間のことを指す。
 
 - データベースクラスタの作成時にデフォルトでpublicスキーマが作成される。
 
-```sql
+```postgres
 # CREATE SCHEMA test AUTHORIZATION user1;
 ```
 
 SCHEMAの削除
-```sql
+```postgres
 # DROP SCHEMA test;
 ```
 
 SCHEMにオブジェクトが存在する場合、
-```sql
+```postgres
 # DROP SCHEMA test CASCADE;
 ```
 
+<br/>
 
 ### CURSOR
-```sql
+```postgres
 # DECLARE sample_cursor INSENSITIVE CURSOR WITHOUT HOLD FOR SELECT * FROM sample;
 ```
 
@@ -326,10 +350,10 @@ FETCH
 - `ALL`オプションを指定すると、カーソルのある次の行以降の全データを取得する。
 
 逆方法にデータを取得しようとした場合はエラーとなり、トランザクションの実行中のみ有効である。
-```sql
+```postgres
 # DECLARE sample_cursor NO SCROLL CURSOR FOR SELECT * FROM sample;
 ```
-
+<br/>
 
 ### ドメイン
 ユーザが一部の制約を設定して作成出来るデータ型のこと。  
@@ -339,6 +363,7 @@ FETCH
 - データベースないの複数のテーブルに使用できる。
 - ドメイン定義の変更は、`ALTER DOMAIN`を使用する。
 
+<br/>
 
 ### 数値型
 
@@ -351,18 +376,20 @@ INT, INTEGER
 DOUBLE PRECISION  
 最低15桁の精度をもつ小数を格納する。
 
+<br/>
 
 ### 宣言パーティション
 - ハッシュ・パーティション
 - レンジ・パーティション
 - リスト・パーティション
 
+<br/>
 
 ### PREPARED
 性能を最適化するために利用可能なサーバ側オブジェクト。
 
 プリペアド文の削除
-```sql
+```postgres
 # DEALLOCATE sample_prepare;
 ```
 
@@ -376,23 +403,26 @@ DOUBLE PRECISION
 
 ### INDEX
 インデックスの削除
-```sql
+```postgres
 # DROP INDEX member_idx;
 ```
 
+<br/>
+
 ### DISTINCT
-```sql
+```postgres
 # SELECT DISTINCT ON (groupNo) groupNo FROM sample WHERE sex = '男';
 # SELECT DISTINCT groupNo FROM sample WHERE sex = '男';
 ```
 
-
-
+<br/>
 
 ### \copy
 - クライアント側のファイルにアクセスするpsqlのメタコマンド。  
 - delimiterオプションを指定することで区切り文字を変更できる。
 - スーパユーザ権限は必要ない
+
+<br/>
 
 ### GRANT
 GRANTコマンドで設定できる権限
@@ -411,23 +441,24 @@ GRANTコマンドで設定できる権限
 - ANALYZE権限は付与できない
 - CREATE ROLE/ CREATE USERは付与できない
 
-```sql
+```postgres
 # GRANT INSERT ON sample TO PUBLIC;
 -- 全ユーザがsampleテーブルにデータを挿入できる
 ```
 
+<br/>
+
 
 ### ANALYZE
 sampleテーブルに対する統計情報を収集する
-```sql
+```postgres
 # ANALYZE sample;
 ```
 
+<br/>
 
 ### VIEW
 複雑なSQL文のSELECT結果を頻繁に使用したい場合、SELECT分の結果をテーブルのように定義することができる。
-
-
 
 VIEWでは
 - SELECT
@@ -437,16 +468,17 @@ VIEWでは
 を実行できる。
 
 ALTER VIEWでデフォルト値を設定する
-```sql
+```postgres
 # ALTER VIEW sample_view ALTER groupNo SET DEFAULT 9;
 ```
 
 - ALTER VIEWを実行するにはビューの所有者である必要がある。
 
+<br/>
+
 ### ロック
 PostgreSQLには、デッドロックを検知すると対象のトランザクションをロールバックし、自動で回復させる機能がある。
 自動で回復させた場合、どのトランザクションがロールバックされるのかはわからない。
-
 
 - デーブル全体のロックは、「LOCK TABLE テーブル名 IN ロックモード MODE」を使用して設定する
 - 行に対するロックは、「SELECT FOR SHARE」や「SELECT FOR UPDATE」を使用して設定できる
@@ -455,7 +487,6 @@ PostgreSQLには、デッドロックを検知すると対象のトランザク�
 <br/>
 
 ## 設定ファイル
-
 ### initdb
 |オプション|説明|
 |---|---|
@@ -467,9 +498,6 @@ PostgreSQLには、デッドロックを検知すると対象のトランザク�
 |-k, --data-checksums|データベースのチェックサム(データ破損を検出するための仕組み)を有効にする|
 |-X ディレクトリ名、--waldir=ディレクトリ名|WALを格納するディレクトリを指定する|
 
-
-
-
 <br/>
 
 ### postgresql.conf
@@ -478,7 +506,6 @@ PostgreSQLのパラメータを設定するファイル。
 - 全てのパラメータ名は大文字と小文字の区別がない
 - パラメータは1行に1つずつ
 - 設定変更反映のタイミングは、パラメータによって異なる
-
 
 initdbで生成される。  
 
@@ -496,7 +523,8 @@ initdbで生成される。
 - log_filename
 - log_min_messages
 - log_line_prefix
-- 
+
+<bt/>
 
 #### 設定が反映されるタイミング
 ![image](./images/k63144.jpg)
@@ -511,6 +539,7 @@ initdbで生成される。
 ### pg_hba.conf
 クライアント認証を設定するファイル。  
 initdbで生成される。  
+
 <br/>
 
 ### pg_settings
@@ -525,20 +554,28 @@ nameカラムにパラメータ名、settingカラムにパラメータ値が表
 - superuser: スーパユーザでSETコマンド実行
 - user: 一般ユーザでSETコマンド実行
 
+<br/>
+
 ### ログメッセージ
 - PANIC: 全てのセッションを中断させた致命的なエラー
 - FATAL: 特定のセッションを中断させたエラーが発生
 - ERROR: 特定のコマンドを中断させたエラーが発生
 - WARNING: 不適切なコマンド使用等に対するユーザへの警告
 
+<br/>
+
 ### SET
 SETで変更した設定は、postgresqlの再起動時に破棄される。
+
+<br/>
 
 ### データベースエンコーディング(サーバエンコーディング)
 
 - initdbコマンドのオプションで設定する
 - SJISは指定できない
 - クライアントエンコーディングではSJISも指定できる
+
+<br/>
 
 ### pg_controldata
 initdbにより初期化されたデータベースクラスタ全体の制御情報を取得するコマンド。
@@ -553,6 +590,7 @@ WAL, チェックポイントの情報、カタログのバージョン情報な
 
 ## バックアップとリストア
 
+バックアップとリストアの概要
 ![](./images/backup.png)
 
 ### pg_dump
@@ -572,13 +610,13 @@ $ pg_dump -F p x > y
 ```
 
 
-稼働中のバックアップ
 ```bash
+# 稼働中のバックアップ
 $ pg_dump sampledb
 ```
 
-停止中のバックアップ
 ```bash
+# 停止中のバックアップ
 $ cd $PGDATA/..
 $ tar cvf backup.tar data
 ```
@@ -601,7 +639,8 @@ $ tar cvf backup.tar data
 - テキスト形式以外でバックアップされたファイルが対象となる。(テキスト形式の場合はpsqlコマンドを使用する)
 - リストア対象には、テーブルデータの他にラージオブジェクトやシーケンス値が含まれる
 - リストア先に指定するデータベースは、リストア時に作成されている必要がる。
-```sql
+
+```postgres
 # pg_restore -U postgres -d test file.dump
 ```
 
@@ -630,8 +669,6 @@ $ psql -f db001.bak newdb
 - archive_commandは`cp %p[path to save]/%f`に設定する
 
 
-
-
 PITRは、
 - 事前設定
 - ベースバックアップ
@@ -648,9 +685,10 @@ PITRは、
 $ pg_basebackup
 ```
 
+<br/>
 
 ### pg_start_backup()
-```sql
+```postgres
 # pg_start_backup(ラベル、ファストモード、排他または非排他)
 ```
 
@@ -682,21 +720,21 @@ PostgreSQLで利用できるレプリケーション機能の一つ。特定の�
 - postgresql.confの`wal_revel`を`logical`に設定する。
 - パブリケーション、サブスクリプションを作成することで動作可能になる。
 
-
-
+<br/>
 
 ### COPY
 サーバ側のファイルとテーブル間のデータをコピーするSQLコマンド。  
 - ファイル名を指定する場合は、スーパユーザ権限が必要。
 - テーブルとファイル間で両方向のコピーが可能
 
-```sql
+```postgres
 # COPY member TO STDOUT;
 -- memberテーブルのデータを標準出力にコピーしている
 -- データはカラムごとにタブ区切りで処理される
 -- ファイル名を指定しない場合は、実行にスーパーユーザ権限は必要ない
 ```
 
+<br/>
 
 ### COPYと\copy
 ```postgres
@@ -717,7 +755,7 @@ COPY 4
 これの実行には、書き込み権限が必要。 
 
 sampleテーブルの内容を、サーバ側にCSV形式で「sample.csv」ファイルとして出力する。
-```sql
+```postgres
 # COPY sample TO '/Users/local/sample.csv' WITH (FROMAT csv);
 ```
 
@@ -732,6 +770,7 @@ CREATE SUBSCRIPTIONは、ロジカルレプリケーション環境の設定を�
 - ロジカルレプリケーションでは、複製元と複製先でデータベース名が異なっていても問題ない
 - 複製対象となるデータの受け入れ先となるテーブルは事前に作成しておく必要がある
 
+<br/>
 
 ### ストリーミングレプリケーション
 マスタサーバからスタンバイサーバへWALを転送し適用することで、同期を実現する。
@@ -739,14 +778,14 @@ CREATE SUBSCRIPTIONは、ロジカルレプリケーション環境の設定を�
 - wal_levelを`replica`または`logical`に設定する必要がある
 - ロジカルレプリケーションと同時に利用できる
 
+<br/>
 
 
 ## トランザクション　
-
 ### SAVEPOINT
 トランザクション内の処理を一部だけ取り消す際に使用する。
 
-```sql
+```postgres
 # SAVEPOINT セーブポイント名;
 # ROLLBACK TO セーブポイント名;
 # RELEASE SAVEPOINT セーブポイント名;
@@ -776,7 +815,7 @@ CREATE SUBSCRIPTIONは、ロジカルレプリケーション環境の設定を�
 日時から指定したフィールドの値のみを取得する。
 引数に指定できるのはタイムスタンプ型のみ。
 
-```sql
+```postgres
 # SELECT date_part('minute', current_timestamp);
 # SELECT date_part('day', interval '6 years 1 month 20 days');
 # SELECT extract(minute from now());
@@ -787,7 +826,7 @@ CREATE SUBSCRIPTIONは、ロジカルレプリケーション環境の設定を�
 
 ### age()
 2つの日付の差分を取得する。
-```sql
+```postgres
 # SELECT age(timestamp '20170707', timestamp '20150327');
 # SELECT age(date '20170707', date '20150327');
 ```
@@ -797,12 +836,12 @@ CREATE SUBSCRIPTIONは、ロジカルレプリケーション環境の設定を�
 ## 運用管理;
 ### ロール / ROLE
 userAロールをスーパーユーザ権限がある状態で作成。
-```sql
+```postgres
 # CREATE ROLE userA WITH SUPERUSER;
 ```
 
 userAロールをrole1のメンバ資格がある状態で作成。
-```sql
+```postgres
 # CREATE ROLE userA IN ROLE role1;
 ```
 
@@ -822,7 +861,7 @@ userAロールをrole1のメンバ資格がある状態で作成。
 が存在する。
 
 ロールの名称を変更する。
-```sql
+```postgres
 # ALTER ROLE userA RENAME TO userB;
 ```
 
@@ -844,7 +883,7 @@ userAロールをrole1のメンバ資格がある状態で作成。
 ### vacuumdb
 更新によって使用されなくなったデータ(不要領域)を回収するコマンド。
 
-```sql
+```postgres
 # vacuumdb -Z -t sample examdb
 ```
 
@@ -870,7 +909,6 @@ userAロールをrole1のメンバ資格がある状態で作成。
 - SETコマンドの実行では反映されない。
 - ver8.3以降ではデフォルトで有効になっている。
 - 実行中も他ユーザーは対象テーブルのデータを更新できる。
-
 
 <br/>
 
@@ -899,7 +937,7 @@ userAロールをrole1のメンバ資格がある状態で作成。
 
 
 システムカタログからテーブルに関する情報を取得する場合
-```sql
+```postgres
 # SELECT * FROM pg_catalog.pg_tables;
 # SELECT * FROM pg_tables; -- スキーマ名は省略可能
 ```
@@ -934,7 +972,7 @@ userAロールをrole1のメンバ資格がある状態で作成。
 ### POSIX正規表現
 #### ~
 大文字と小文字を区別し、パターンに一致するか判定。
-```sql
+```postgres
 # DELETE FROM sample WHERE name ~ 'sa';
 -- sato, iwasaなどが一致
 ```
@@ -943,7 +981,7 @@ userAロールをrole1のメンバ資格がある状態で作成。
 
 #### !~*
 `!`はパターンとの一致を否定、`*`は大文字と小文字の区別なし。
-```sql
+```postgres
 # DELETE FROM sample WHERE name !~* 'TO';
 -- TANAKAなどが一致
 ```
@@ -958,7 +996,7 @@ userAロールをrole1のメンバ資格がある状態で作成。
 
 #### SIMILAR TO
 
-```sql
+```postgres
 # DELETE FROM sample WHERE name SIMILAR TO '%A001%';
 ```
 
@@ -966,10 +1004,8 @@ userAロールをrole1のメンバ資格がある状態で作成。
 
 <br/>
 
-
 #### LIKE
 SIMILAR TOに同じ。
-
 
 <br/>
 
@@ -1013,6 +1049,4 @@ SIMILAR TOに同じ。
 |trunc|指定した数値の小数点部分を、指定したくらいで切り捨てた値を返す|
 |random|0以上1未満の範囲でランダムな値を返す|
 
-
 <br/>
-
